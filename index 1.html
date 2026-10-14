@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLIENT ID - MYOS907(1)</title>
+<style>
+  :root { --ink:#1d2433; --paper:#f5f7fb; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body { font-family:Georgia,"Times New Roman",serif; background:var(--paper); color:var(--ink); overflow:hidden; }
+  body.ready { overflow:auto; }
+
+  /* ---------- Main content ---------- */
+  main { min-height:100%; padding:12vh 8vw; max-width:900px; margin:0 auto; }
+  main h1 { font-size:clamp(2rem,5vw,3.5rem); line-height:1.1; margin-bottom:1rem; }
+  main p  { font-size:1.15rem; line-height:1.7; max-width:60ch; }
+
+  /* ---------- Sticky header bar ---------- */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    height: 65px;                 /* <-- bar-er uchcha ekhane bodlao */
+    padding: 0 4vw;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e7ef;
+    box-shadow: 0 2px 10px rgba(20, 30, 60, .08);
+  }
+  .site-header img { display: block; height: 52px; width: auto; max-width: 100%; object-fit: cover; }
+  .site-header .logo-left  { justify-self: start; }
+  .site-header .logo-right { justify-self: end; }
+  .site-header .logo-mid   { justify-self: center; height: 56px; }
+
+  /* ---------- Contact ---------- */
+  .contact { padding: 22px 5vw 8px; text-align: center; }
+  .contact-title {
+    font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+    font-size: clamp(.95rem, 2.2vw, 1.15rem);
+    font-weight: 700;             /* bold na, halka */
+    letter-spacing: .12em;
+    color: #4a556e;
+    margin-bottom: 14px;
+  }
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .badges a, .badges span { display: block; border-radius: 50%; }
+  .badges img {
+    width: 48px; height: 48px;    /* <-- batch-er size ekhane bodlao */
+    border-radius: 50%;
+    object-fit: cover;
+    background: #eef1f7;
+    border: 1px solid #d5dbe8;
+    display: block;
+    transition: transform .15s ease;
+  }
+  .badges a:active img { transform: scale(.92); }
+
+  /* ---------- Photo gallery (scroll korle por por ashbe) ---------- */
+  .gallery {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;                    /* <-- duita photo-r majher fak */
+    padding: 18px 4vw 40px;
+  }
+  .gallery img {
+    width: 100%;
+    max-width: 900px;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+    background: #eef1f7;
+    min-height: 120px;
+  }
+
+  /* ---------- Footer (page-er ekdom shesh e) ---------- */
+  .site-footer {
+    padding: 22px 5vw 34px;
+    text-align: center;
+    background: #ffffff;
+    border-top: 1px solid #e3e7ef;
+    font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+  }
+  .site-footer .powered   { font-size: .8rem; letter-spacing: .12em; color: #6b7590; margin-bottom: 8px; }
+  .site-footer .powered-img { display: inline-block; }
+  .site-footer .powered-img img { display: block; height: 52px; width: auto; max-width: 70vw; object-fit: contain; } /* <-- logo-r uchcha ekhane bodlao */
+  .site-footer .client-id { margin-top: 12px; font-size: .78rem; letter-spacing: .08em; color: #8a93a8; }
+
+  /* ---------- Loading screen (app khulle prothome blue + spinner) ---------- */
+  #loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #2f6fed;          /* <-- blue rong ekhane bodlao */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .45s ease;
+  }
+  #loader.hide { opacity: 0; pointer-events: none; }
+  #loader .spinner {
+    width: 64px; height: 64px;    /* <-- spinner-er size */
+    border: 5px solid rgba(255, 255, 255, .35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Intro layer ---------- */
+  #intro { position:fixed; inset:0; z-index:10; overflow:hidden; will-change:transform; }
+  #intro img { position:absolute; display:block; }
+  #overlay, #mover { will-change:transform; }
+  #mover { z-index:2; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #intro { display:none; }
+    body { overflow:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======= Loading screen ======= -->
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- ======= Sticky header bar ======= -->
+<header class="site-header">
+  <img id="logoLeft"  class="logo-left"  alt="Left logo">
+  <img id="logoMid"   class="logo-mid"   alt="Middle logo">
+  <img id="logoRight" class="logo-right" alt="Right logo">
+</header>
+
+<!-- ======= Contact with us + batch ======= -->
+<section class="contact">
+  <div class="contact-title">Available On</div>
+  <div class="badges" id="badges"></div>
+</section>
+
+<!-- ======= Photo gallery ======= -->
+<section class="gallery" id="gallery"></section>
+
+<!-- ======= Footer ======= -->
+<footer class="site-footer" id="siteFooter"></footer>
+
+<!-- ======= Intro ======= -->
+<div id="intro">
+  <img id="photo"   alt="" src="">
+  <img id="overlay" alt="" src="">
+  <img id="mover"   alt="" src="">
+</div>
+
+<script>
+/* ============================================================
+   1) IMAGE FILE-ER NAM  (HTML-er pashe image rakho)
+   ============================================================ */
+/* Drive link ba file ID ja khushi dao. Dutoi cholbe:
+     "https://drive.google.com/file/d/XXXX/view?usp=sharing"
+     "https://drive.google.com/uc?export=view&id=XXXX"
+     "XXXX"   (sudhu file ID)
+   Drive file-er sharing: "Anyone with the link" kore nio. */
+
+/* ---- Intro-r 3-ta image ---- */
+const IMAGES = {
+  jpg: "https://drive.google.com/file/d/16Hwh7-oyfwQAhbSGy8TQmB99MmTvh7_y/view?usp=drivesdk",
+  png: "https://drive.google.com/file/d/14ETbQIEB1WO8Y9lebPySn_Re0bIHxKDj/view?usp=drivesdk",
+  gif: "https://drive.google.com/file/d/1bRur7jU4OKRLUqM6TVgQSWa7DbsWTO3h/view?usp=drivesdk"
+};
+
+/* ---- Header bar-er 3-ta jpg (sticky, scroll korleo upore thakbe) ---- */
+const HEADER = {
+  left:   "https://drive.google.com/file/d/1uF3A6XjvoUTeNe0LPliMR60IfrCkTFh7/view?usp=drivesdk",   // bam pash-er logo
+  middle: "https://drive.google.com/file/d/1HwevyygMsRwwegmwO2t0x-k300P4QjN-/view?usp=drivesdk",   // majhkhaner jpg
+  right:  "https://drive.google.com/file/d/1czaic7Jia2aZ7DGi4tQZCCT-itmZ7sj6/view?usp=drivesdk"    // dan pash-er logo
+};
+
+/* ---- "Contact with us"-er niche gol batch ----
+   img  = batch-er photo (Drive link)
+   link = click korle jekhane jabe (Facebook, WhatsApp, kono website...)
+   Notun batch lagle { img: "...", link: "..." } ei line copy kore niche jog koro. */
+const BADGES = [
+  { img: "https://drive.google.com/file/d/17fifSJaXiDh7Xp-2t6BKc7U4p7xIDZO2/view?usp=drivesdk", link: "https://www.google.com/url?q=https%3A%2F%2Fwww.facebook.com%2Fshare%2F17E4Zr6qwN%2F&sa=D&sntz=1&usg=AOvVaw2ytVnqG89Snl1_UlKwMo_o" },
+  { img: "https://drive.google.com/file/d/11UBNJipel5Da0EZgDTeGNdNMPWJ6PidX/view?usp=drivesdk", link: "https://www.google.com/url?q=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1B7s16UhWa%2F&sa=D&sntz=1&usg=AOvVaw1XpkSoP7g0V8U1UgSHX-pn" },
+  { img: "https://drive.google.com/file/d/11hdvyLeMXLDCZdxMjO71oAoSsKeOETvh/view?usp=drivesdk", link: "https://www.google.com/url?q=https%3A%2F%2Fwww.instagram.com%2Fvickysssalon%3Futm_source%3Dqr%26igsh%3DMXE3Mmw4Z2x6d2ZxbQ%3D%3D&sa=D&sntz=1&usg=AOvVaw28qwiJWPQ4Mvi9gyIurv77" },
+  { img: "https://drive.google.com/file/d/1EUfe0wNiQtg1qK9K-y4Xg_9w4V1Akcfh/view?usp=drivesdk", link: "https://www.youtube.com/@vickysfamilysalon" },
+  { img: "https://drive.google.com/file/d/12FM0-DCCOnI6H_MdpPgjVFYVGMiVZK2B/view?usp=drivesdk", link: "https://share.google/85FsMMGPRvoJetZ9E" },
+  { img: "https://drive.google.com/file/d/1EOeDcHajp8SSJVpsPa4QE1A0s117Nlee/view?usp=drivesdk", link: "https://www.google.com/url?q=https%3A%2F%2Fwa.me%2F916204484424%3Ftext%3DHello%2520%2C%2520I%2520would%2520like%2520to%2520Book%2520an%2520Appointment%2520%25E2%2598%25BA%25EF%25B8%258F&sa=D&sntz=1&usg=AOvVaw07I4oDVBMoFiffjH2pp5HQ" },
+  { img: "https://drive.google.com/file/d/1nXfYPHY56X2XyVFHxUOMe_VKXuZZt6yE/view?usp=drivesdk", link: "tel:+916204484424" },
+];
+const BADGE_TARGET = "_blank";   // "_blank" = notun tab/window, "_self" = ekoi page-e
+
+/* ---- Batch-er niche photo-r list (unlimited) ----
+   Drive link-gulo ekta ekta kore likho, jemon ache temon por por dekhabe. */
+const PHOTOS = [
+"https://drive.google.com/file/d/18XTPGk-kiqFUmu_wOP3TBY8b8ek5sNlu/view?usp=drivesdk",
+"https://drive.google.com/file/d/1lqdk2Asj1KLvHPOuH7kiyQeQRKtOtop3/view?usp=drivesdk",
+"https://drive.google.com/file/d/1fHS1eYapHe2jCJ2Z5VAu7R3JVjESm0o4/view?usp=drivesdk",
+"https://drive.google.com/file/d/10tNLVQkSjGH4mkuq-ktVQUz-Zv9YR5k5/view?usp=drivesdk",
+"https://drive.google.com/file/d/1SsGBZIBqAzHvXfw5FxY9thcXiEICZ80L/view?usp=drivesdk",
+"https://drive.google.com/file/d/1SA6F4B_eyFsu8ey697Bq83GBJ03ur1Nu/view?usp=drivesdk",
+"https://drive.google.com/file/d/1_rYMoBKFFvIssV5FvltKJzFHvtHUy80I/view?usp=drivesdk",
+"https://drive.google.com/file/d/1hVqOLResp8MZ1gkcSi-Y-y9xVb9hccOO/view?usp=drivesdk",
+"https://drive.google.com/file/d/1E9L0c5BbuVH4oE66aPnTduGAiORzSKfs/view?usp=drivesdk",
+"https://drive.google.com/file/d/1KNZGdPvehDkumLg60Is1B9ezbZ-pK1w_/view?usp=drivesdk",
+"https://drive.google.com/file/d/10g9MKNB3AKOH8S1jN4VTqxjsnZODXN2F/view?usp=drivesdk",
+"https://drive.google.com/file/d/1Z6hzUeBrAgYqdTrZmJeXzwZGtyEas9Qy/view?usp=drivesdk",
+];
+
+/* ---- Page-er ekdom niche: "Powered by" + logo + Client ID ----
+   img  = logo/photo-r Drive link
+   link = click korle jekhane jabe (khali rakhle click hobe na)
+   clientId = niche je Client ID dekhabe */
+const FOOTER = {
+  text: "Powered by",
+  img:  "https://drive.google.com/file/d/195u5rls3l_Eq_nCGRiERl0lXkK2eMPCX/view?usp=drivesdk",       // <-- Drive photo link
+  link: "",       // <-- click korle ei link-e jabe
+  clientId: "MYOS907(1)"  // <-- ekhane Client ID likho
+};
+
+/* ---- Loading screen ---- */
+const LOADER = {
+  minTime: 1000,     // kompokkhe koto ms spinner ghurbe (1000 = 1 second)
+  maxTime: 3000,     // image dhire load hole-o sorbocho koto ms opekkha korbe
+  preloadPhotos: 3   // gallery-r prothom koyta photo spinner-er shomoy-i load hoye jabe
+};
+
+/* ============================================================
+   ON / OFF SWITCH  (Google Sheet "Client Data" theke chole)
+   - url      : Apps Script Web App-er link (/exec diye shesh hoy)
+   - clientId : ei app kon client-er (Sheet-er Client ID column-er sathe mile)
+   Sheet-er H column (Status) e ON likhle chalu, OFF likhle bondho.
+   url khali rakhle switch kaj korbe na (shobshomoy chalu thakbe).
+   ============================================================ */
+const LICENSE = {
+  url: "https://script.google.com/macros/s/AKfycbxMsY8T7xdCnY05QUym7p5isIkjU8GC_FgiS-aev2jR2fVE2xJRgvTqb9l1Gsy06zycvw/exec",          // <-- Apps Script Web App link ekhane boshao
+  clientId: "MYOS907(1)", // <-- ei client-er ID (Sheet-er A column-er moto)
+  failOpen: true,   // true  = internet/sheet na pele site chalu thakbe
+                    // false = sheet theke "ON" na pele site bondho
+  title: "Service Suspended",
+  message: "Your service is currently inactive. Please renew to continue.",
+  renewText: "Renew Now"
+};
+
+/* ============================================================
+   2) PROTTEKTA IMAGE-ER SIZE ar POSITION
+   Unit: px, vw, vh, %   (jemon "300px", "40vw", "50%")
+   "auto" dile image-er original onupat thakbe.
+
+   x : positive = DAN dike,  negative = BAM dike
+   y : positive = NICHE,     negative = UPORE
+   ============================================================ */
+
+/* ---- JPG (background photo) ---- */
+const JPG = {
+  width:  "100%",
+  height: "100%",
+  x: "0px",
+  y: "0px",
+  fit: "cover"          // cover = jure bhore, contain = puro photo
+};
+
+/* ---- PNG (JPG-er opore; GIF chole gele ei PNG niche pore jabe) ---- */
+const PNG = {
+  width:  "125%",
+  height: "150%",
+  x: "0px",
+  y: "0px",
+  fit: "contain",
+  dropDistance: "115vh" // niche porar somoy koto dur jabe (screen-er baire jete hole boro rakho)
+};
+
+/* ---- GIF (dan theke bam e puro cholei jabe) ---- */
+const GIF = {
+  width:  "230px",
+  height: "auto",
+  bottom: "32vh",       // niche theke koto upore diye cholbe
+  fromRight: "0px",     // dan pash theke koto bhitor theke shuru (0 = thik baire)
+  exitLeft: "-100%",    // bam e kothay giye thambe. "-100%" = puro screen-er baire chole jabe
+  fit: "contain"
+};
+
+/* ============================================================
+   3) TIMING (milliseconds, 1000 = 1 second)
+   Sob bariye dile aro dhire hobe.
+   ============================================================ */
+const T = {
+  hold:      1000,  // shuru te sthir hoye thakbe
+  across:    4500,  // GIF dan theke bam e jete koto somoy
+  pauseA:    500,   // GIF cholar pore thamar somoy
+  pngFall:   2300,  // PNG niche porte koto somoy
+  pauseB:    400,   // PNG poreo thamar somoy
+  lift:      2000   // JPG upore uthte koto somoy
+};
+
+/* ======================= Ekhan theke niche kichu change korar dorkar nei ======================= */
+
+const svg = s => "data:image/svg+xml;utf8," + encodeURIComponent(s);
+const PLACEHOLDER = {
+  jpg: svg('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f3b73"/><stop offset="1" stop-color="#e08a4b"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/></svg>'),
+  png: svg('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240"><rect x="4" y="4" width="472" height="232" rx="24" fill="rgba(255,255,255,.85)" stroke="#1d2433" stroke-width="4"/><text x="240" y="138" font-family="Georgia" font-size="48" text-anchor="middle" fill="#1d2433">PNG</text></svg>'),
+  gif: svg('<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><circle cx="70" cy="70" r="60" fill="#2f6fed"/><text x="70" y="82" font-family="Georgia" font-size="34" text-anchor="middle" fill="#fff">GIF</text></svg>')
+};
+
+const intro   = document.getElementById("intro");
+const photo   = document.getElementById("photo");
+const overlay = document.getElementById("overlay");
+const mover   = document.getElementById("mover");
+
+/* Drive link / file ID -> direct image link */
+function driveUrl(v) {
+  v = (v || "").trim();
+  if (!v) return "";
+  if (/^[\w-]{20,}$/.test(v)) return `https://lh3.googleusercontent.com/d/${v}`;
+  const m = v.match(/drive\.google\.com\/file\/d\/([\w-]+)/) ||
+            v.match(/drive\.google\.com\/.*[?&]id=([\w-]+)/) ||
+            v.match(/lh3\.googleusercontent\.com\/d\/([\w-]+)/);
+  return m ? `https://lh3.googleusercontent.com/d/${m[1]}` : v;
+}
+
+function load(el, src, fallback) {
+  el.referrerPolicy = "no-referrer";
+  el.onerror = () => { el.onerror = null; el.src = fallback; };
+  el.src = driveUrl(src) || fallback;
+}
+load(photo,   IMAGES.jpg, PLACEHOLDER.jpg);
+load(overlay, IMAGES.png, PLACEHOLDER.png);
+load(mover,   IMAGES.gif, PLACEHOLDER.gif);
+
+/* Header images */
+const boxSvg = (w, h, t) => svg(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="10" fill="#e7ebf3"/><text x="${w/2}" y="${h/2+6}" font-family="Georgia" font-size="18" text-anchor="middle" fill="#6b7590">${t}</text></svg>`);
+load(document.getElementById("logoLeft"),  HEADER.left,   boxSvg(160, 90, "LOGO"));
+load(document.getElementById("logoMid"),   HEADER.middle, boxSvg(320, 100, "JPG"));
+load(document.getElementById("logoRight"), HEADER.right,  boxSvg(160, 90, "LOGO"));
+
+/* Gol batch (click korle link e jabe) */
+const badgeBox = document.getElementById("badges");
+const badgeFallback = svg('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><circle cx="24" cy="24" r="23" fill="#dfe5f1"/></svg>');
+BADGES.forEach(b => {
+  const im = document.createElement("img");
+  im.alt = "";
+  load(im, b.img, badgeFallback);
+  let holder;
+  if (b.link && b.link.trim()) {
+    holder = document.createElement("a");
+    holder.href = b.link.trim();
+    holder.target = BADGE_TARGET;
+    holder.rel = "noopener noreferrer";
+  } else {
+    holder = document.createElement("span");
+  }
+  holder.appendChild(im);
+  badgeBox.appendChild(holder);
+});
+
+/* Photo gallery */
+const gallery = document.getElementById("gallery");
+const photoFallback = boxSvg(900, 300, "Photo load hoy nai");
+PHOTOS.forEach((link, idx) => {
+  if (!link || !link.trim()) return;
+  const im = document.createElement("img");
+  im.alt = "";
+  im.loading = idx < LOADER.preloadPhotos ? "eager" : "lazy";
+  load(im, link, photoFallback);
+  gallery.appendChild(im);
+});
+
+/* Footer: Powered by + logo (clickable) + Client ID */
+(function () {
+  const f = document.getElementById("siteFooter");
+  if (FOOTER.text) {
+    const t = document.createElement("div");
+    t.className = "powered";
+    t.textContent = FOOTER.text;
+    f.appendChild(t);
+  }
+  if (FOOTER.img && FOOTER.img.trim()) {
+    const im = document.createElement("img");
+    im.alt = "";
+    load(im, FOOTER.img, boxSvg(160, 40, "LOGO"));
+    let holder;
+    if (FOOTER.link && FOOTER.link.trim()) {
+      holder = document.createElement("a");
+      holder.href = FOOTER.link.trim();
+      holder.target = BADGE_TARGET;
+      holder.rel = "noopener noreferrer";
+    } else {
+      holder = document.createElement("span");
+    }
+    holder.className = "powered-img";
+    holder.appendChild(im);
+    f.appendChild(holder);
+  }
+  if (FOOTER.clientId && FOOTER.clientId.trim()) {
+    const c = document.createElement("div");
+    c.className = "client-id";
+    c.textContent = "Client ID - " + FOOTER.clientId.trim();
+    f.appendChild(c);
+  }
+})();
+
+/* JPG */
+Object.assign(photo.style, {
+  width: JPG.width, height: JPG.height, objectFit: JPG.fit,
+  top: "0", left: "0",
+  transform: `translate(${JPG.x}, ${JPG.y})`
+});
+
+/* PNG: majhkhane boshe, tarpor x/y diye sarano */
+const pngBase = `translate(-50%, -50%) translate(${PNG.x}, ${PNG.y})`;
+Object.assign(overlay.style, {
+  width: PNG.width, height: PNG.height, objectFit: PNG.fit,
+  top: "50%", left: "50%",
+  transform: pngBase
+});
+
+/* GIF */
+Object.assign(mover.style, {
+  width: GIF.width, height: GIF.height, objectFit: GIF.fit,
+  left: "0", bottom: GIF.bottom
+});
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const run  = (el, frames, opts) => el.animate(frames, { fill: "forwards", ...opts }).finished;
+
+async function play() {
+  const startX = `calc(100vw + ${GIF.fromRight})`;
+  mover.style.transform = `translate(${startX}, 0px)`;
+
+  await wait(T.hold);
+
+  // 1) GIF dan theke bam e chole jabe
+  await run(mover, [
+    { transform: `translate(${startX}, 0px)` },
+    { transform: `translate(${GIF.exitLeft}, 0px)` }
+  ], { duration: T.across, easing: "linear" });
+
+  await wait(T.pauseA);
+
+  // 2) PNG niche pore jabe (dhire shuru, tarpor gotibriddhi)
+  await run(overlay, [
+    { transform: pngBase },
+    { transform: `${pngBase} translateY(${PNG.dropDistance})` }
+  ], { duration: T.pngFall, easing: "cubic-bezier(.55,0,.9,.5)" });
+
+  await wait(T.pauseB);
+
+  // 3) JPG upore uthe chole jabe
+  await run(intro, [
+    { transform: "translateY(0)" },
+    { transform: "translateY(-100%)" }
+  ], { duration: T.lift, easing: "cubic-bezier(.65,0,.35,1)" });
+
+  // 4) Content
+  if (window.__locked) return;
+  intro.remove();
+  document.body.classList.add("ready");
+}
+/* ---------- ON / OFF check ---------- */
+async function isActive() {
+  if (!LICENSE.url.trim() || !LICENSE.clientId.trim()) return { ok: true };
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const sep = LICENSE.url.includes("?") ? "&" : "?";
+    const res = await fetch(
+      LICENSE.url.trim() + sep + "id=" + encodeURIComponent(LICENSE.clientId.trim()) + "&t=" + Date.now(),
+      { cache: "no-store", signal: ctrl.signal }
+    );
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("bad response");
+    const d = await res.json();
+    if (!d || !d.found) return { ok: LICENSE.failOpen };
+    return { ok: String(d.status || "").trim().toUpperCase() === "ON", data: d };
+  } catch (e) {
+    return { ok: LICENSE.failOpen };
+  }
+}
+
+/* Bondho thakle client ja dekhbe */
+function lock(d) {
+  d = d || {};
+  window.__locked = true;
+  document.body.className = "";
+  document.body.style.overflow = "auto";
+  document.body.innerHTML = "";
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;background:#f5f7fb;font-family:Georgia,serif;color:#1d2433;";
+
+  const card = document.createElement("div");
+  card.style.cssText = "width:100%;max-width:420px;background:#fff;border:1px solid #e3e7ef;border-radius:14px;box-shadow:0 6px 24px rgba(20,30,60,.10);padding:26px 22px;text-align:center;";
+
+  const h = document.createElement("div");
+  h.style.cssText = "font-size:1.35rem;font-weight:bold;margin-bottom:8px;";
+  h.textContent = LICENSE.title;
+
+  const m = document.createElement("div");
+  m.style.cssText = "font-size:.98rem;line-height:1.6;color:#4a556e;margin-bottom:18px;";
+  m.textContent = LICENSE.message;
+
+  const list = document.createElement("div");
+  list.style.cssText = "text-align:left;border-top:1px solid #e3e7ef;";
+  [
+    ["Client ID",  d.id],
+    ["Name",       d.name],
+    ["Mobile No",  d.mobile],
+    ["Address",    d.address],
+    ["Start Date", d.start],
+    ["End Date",   d.end]
+  ].forEach(([k, v]) => {
+    if (!v) return;
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:10px;padding:10px 2px;border-bottom:1px solid #eef1f7;font-size:.95rem;";
+    const kk = document.createElement("div");
+    kk.style.cssText = "flex:0 0 96px;color:#6b7590;";
+    kk.textContent = k;
+    const vv = document.createElement("div");
+    vv.style.cssText = "flex:1;font-weight:bold;word-break:break-word;";
+    vv.textContent = v;
+    row.append(kk, vv);
+    list.appendChild(row);
+  });
+
+  card.append(h, m, list);
+
+  /* Renew button: Sheet-er Remarks (I) column-er link */
+  const link = String(d.renew || "").trim();
+  if (/^(https?:|tel:|mailto:|upi:|whatsapp:)/i.test(link)) {
+    const btn = document.createElement("a");
+    btn.href = link;
+    btn.target = BADGE_TARGET;
+    btn.rel = "noopener noreferrer";
+    btn.textContent = LICENSE.renewText;
+    btn.style.cssText = "display:block;margin-top:20px;padding:13px;border-radius:10px;background:#2f6fed;color:#fff;text-decoration:none;font-weight:bold;font-size:1rem;letter-spacing:.04em;";
+    card.appendChild(btn);
+  }
+
+  wrap.appendChild(card);
+  document.body.appendChild(wrap);
+}
+
+/* Spinner shesh hole loader sorie debe */
+function hideLoader() {
+  const l = document.getElementById("loader");
+  if (!l) return;
+  l.classList.add("hide");
+  setTimeout(() => l.remove(), 600);
+}
+
+/* Image load hoyeche kina */
+const imgReady = img => (img.complete && img.naturalWidth !== 0)
+  ? Promise.resolve()
+  : new Promise(res => {
+      img.addEventListener("load",  res, { once: true });
+      img.addEventListener("error", res, { once: true });
+    });
+
+/* App khulle: spinner ghurbe, tar moddhe shob load hobe, tarpor intro shuru */
+(async function start() {
+  const licensePromise = isActive();
+  const images = Array.from(document.querySelectorAll("img")).filter(i => i.loading !== "lazy");
+  const imagesPromise = Promise.all(images.map(imgReady));
+
+  await Promise.all([
+    wait(LOADER.minTime),
+    Promise.race([imagesPromise, wait(LOADER.maxTime)])
+  ]);
+
+  const r = await licensePromise;
+  if (!r.ok) { lock(r.data); return; }
+
+  hideLoader();
+  play().catch(() => {});
+})();
+
+/* App-e ferot ashle abar check (bondho korle sathe sathe lock hobe) */
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible" || window.__locked) return;
+  if (!LICENSE.url.trim()) return;
+  const r = await isActive();
+  if (!r.ok) lock(r.data);
+});
+</script>
+</body>
+</html>
